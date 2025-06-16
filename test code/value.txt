@@ -1,0 +1,50 @@
+#include <FEHLCD.h>
+#include <FEHIO.h>
+#include <FEHSD.h>
+
+// Declarations for analog optosensors
+AnalogInputPin right(FEHIO::P2_7);
+AnalogInputPin middle(FEHIO::P2_3);
+AnalogInputPin left(FEHIO::P2_1);
+
+int main(void)
+{
+    float x, y; //for touch screen
+    FEHFile *ofptr = SD.FOpen("Output.txt", "w");
+   LCD.Clear(BLACK);
+    LCD.SetFontColor(WHITE);
+    while(true){
+      LCD.Clear();
+      LCD.WriteAt(right.Value(), 100, 50);
+      LCD.WriteAt(middle.Value(), 100, 100);
+      LCD.WriteAt(left.Value(), 100, 150);
+
+      //SD.FPrintf(ofptr, "\nRight: %f    Left: %f     Middle: %f", right.Value(), middle.Value(), left.Value());
+
+      Sleep(0.2); // Wait to avoid double input
+    }
+
+    SD.FClose(ofptr);
+    LCD.Clear(BLACK);
+    LCD.WriteLine("Test Finished");
+
+    return 0;
+}
+
+/*
+   while(true){
+      if(lightReader.Value() < 1){
+         LCD.SetBackgroundColor(RED);
+         LCD.WriteAt(lightReader.Value(), 150, 50);
+         LCD.WriteAt("RED", 150, 100);
+      }else if(lightReader.Value() > 1.2 && lightReader.Value()<1.5){
+         LCD.SetBackgroundColor(BLUE);
+         LCD.WriteAt(lightReader.Value(), 150, 50);
+         LCD.WriteAt("BLUE", 150, 100);
+      }else{
+         LCD.SetBackgroundColor(BLACK);
+         LCD.WriteAt(lightReader.Value(), 150, 50);
+         LCD.WriteAt("NO COLOR", 150, 100);
+      }
+   }
+   */

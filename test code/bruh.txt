@@ -1,0 +1,273 @@
+#include <FEHLCD.h>
+#include <FEHIO.h>
+#include <FEHMotor.h>
+#include <FEHServo.h>
+#include <FEHUtility.h>
+#include <math.h>
+#include <FEHFile.h>
+#include <FEHSD.h>
+
+int maxSpeed = 50;
+
+const int WHITELINE = 100;
+
+FEHMotor motorBack(FEHMotor::Motor0,9.0);
+FEHMotor motorRight(FEHMotor::Motor1,9.0);
+FEHMotor motorLeft(FEHMotor::Motor2,9.0);
+
+FEHServo arm(FEHServo::Servo0);
+
+AnalogInputPin lightReader(FEHIO::P0_3);
+
+
+AnalogInputPin lineLeft(FEHIO::P2_2);
+AnalogInputPin lineMiddle(FEHIO::P2_1);
+AnalogInputPin lineRight(FEHIO::P2_0);
+
+DigitalInputPin switch1(FEHIO::P0_0);
+DigitalInputPin switch2(FEHIO::P0_1);
+DigitalInputPin switch3(FEHIO::P0_2);
+DigitalInputPin switch4(FEHIO::P0_3);
+
+void driveForward(float);
+void driveBackward(float);
+void strafeLeft(float);
+void strafeRight(float);
+void spinRight(float);
+void spinLeft(float);
+void lineForward(float);
+void lineBackward(float);
+void driveForwardLeft(float);
+void untilSwitch(float, int, DigitalInputPin);
+void untilTime(float, int, float);
+void cycleActions();
+void firstPoint();
+void optoValues();
+
+/*
+0: driveForward
+1: driveBackward
+2: strafeLeft
+3: strafeRight
+4: spinLeft
+5: spinRight
+6: lineForward
+7: lineBackward
+8: driveForwardLeft
+*/
+enum LineStates {
+
+MIDDLE,
+
+RIGHT,
+
+LEFT
+
+};
+
+int main() {
+    //Declare example variables
+
+float right;
+float middle;
+float left;
+
+//Open input log file
+
+FEHFile *ifptr = SD.FOpen("Input.txt", "r");
+FEHFile *ofptr = SD.FOpen("Output.txt", "w");
+
+
+//Scan data using formatted string
+while(true){
+    right = lineRight.Value();
+    middle = lineMiddle.Value();
+    left = lineLeft.Value();
+    SD.FScanf(ifptr, "%f%f%f", &right, &middle, &left);
+    SD.FPrintf(ofptr, "Right: %d, Middle: %f, Left: %c", ex_int, ex_float, ex_char);
+}
+
+
+
+//Close input log file
+
+
+
+//Open output log file
+
+
+//Print data using formatted string
+
+
+
+//Close output log file
+SD.FClose(ifptr);
+SD.FClose(ofptr);
+
+
+}
+
+
+
+void cycleActions(){
+    float x;
+    float y;
+    int count = -1;
+    while(true){
+        if(LCD.Touch(&x, &y)){
+            count++;
+
+            LCD.Clear();
+            while(LCD.Touch(&x, &y)){
+                switch(count%6){
+                case 0: driveForward(50);  LCD.WriteAt("Forward", 150, 100); break;
+                case 1: driveBackward(50); LCD.WriteAt("Backward", 150, 100); break;
+                case 2: strafeLeft(50); LCD.WriteAt("Strafe Left", 150, 100); break;
+                case 3: strafeRight(50); LCD.WriteAt("Strafe Right", 150, 100); break;
+                case 4: spinLeft(50);  LCD.WriteAt("Spin Left", 150, 100); break;
+                case 5: spinRight(50); LCD.WriteAt("Spin Right", 150, 100); break;
+            }
+            }
+        }
+        motorBack.Stop();
+        motorRight.Stop();
+        motorLeft.Stop();
+        Sleep(.1);
+    }
+}
+
+void untilSwitch(float speed, int action, DigitalInputPin button){
+    LCD.Clear();
+    while(button.Value()>0){
+        switch(action){
+            case 0: driveForward(speed);  LCD.WriteAt("Forward", 150, 100); break;
+            case 1: driveBackward(speed); LCD.WriteAt("Backward", 150, 100); break;
+            case 2: strafeLeft(speed); LCD.WriteAt("Strafe Left", 150, 100); break;
+            case 3: strafeRight(speed); LCD.WriteAt("Strafe Right", 150, 100); break;
+            case 4: spinLeft(speed);  LCD.WriteAt("Spin Left", 150, 100); break;
+            case 5: spinRight(speed); LCD.WriteAt("Spin Right", 150, 100); break;
+            case 6: lineForward(speed); LCD.WriteAt("Line Forward", 150, 100); break;
+            case 7: lineBackward(speed); LCD.WriteAt("Line Backward", 150, 100); break;
+            case 8: driveForwardLeft(speed); LCD.WriteAt("Forward Left", 150, 100); break;
+        }
+    }
+    motorBack.Stop(); 
+    motorLeft.Stop(); 
+    motorRight.Stop(); 
+}
+
+void untilTime(float speed, int action, float time){
+    LCD.Clear();
+    float t_now = TimeNow();
+    while(TimeNow()-t_now<time){
+        switch(action){
+            case 0: driveForward(speed);  LCD.WriteAt("Forward", 150, 100); break;
+            case 1: driveBackward(speed); LCD.WriteAt("Backward", 150, 100); break;
+            case 2: strafeLeft(speed); LCD.WriteAt("Strafe Left", 150, 100); break;
+            case 3: strafeRight(speed); LCD.WriteAt("Strafe Right", 150, 100); break;
+            case 4: spinLeft(speed);  LCD.WriteAt("Spin Left", 150, 100); break;
+            case 5: spinRight(speed); LCD.WriteAt("Spin Right", 150, 100); break;
+            case 6: lineForward(speed); LCD.WriteAt("Line Forward", 150, 100); break;
+            case 7: lineBackward(speed); LCD.WriteAt("Line Backward", 150, 100); break;
+        }
+    }
+    motorBack.Stop(); 
+    motorLeft.Stop(); 
+    motorRight.Stop(); 
+}
+
+void untilLineDetect(float speed, int action, float time){
+    LCD.Clear();
+    float t_now = TimeNow();
+    while(TimeNow()-t_now<time){
+        switch(action){
+            case 0: driveForward(speed);  LCD.WriteAt("Forward", 150, 100); break;
+            case 1: driveBackward(speed); LCD.WriteAt("Backward", 150, 100); break;
+            case 2: strafeLeft(speed); LCD.WriteAt("Strafe Left", 150, 100); break;
+            case 3: strafeRight(speed); LCD.WriteAt("Strafe Right", 150, 100); break;
+            case 4: spinLeft(speed);  LCD.WriteAt("Spin Left", 150, 100); break;
+            case 5: spinRight(speed); LCD.WriteAt("Spin Right", 150, 100); break;
+            case 6: lineForward(speed); LCD.WriteAt("Line Forward", 150, 100); break;
+            case 7: lineBackward(speed); LCD.WriteAt("Line Backward", 150, 100); break;
+        }
+    }
+    motorBack.Stop(); 
+    motorLeft.Stop(); 
+    motorRight.Stop(); 
+}
+
+
+
+void lineForward(float speed){
+    bool tooLeft = lineRight.Value() < WHITELINE; //detects whiteline
+    bool tooRight = lineLeft.Value() < WHITELINE;
+    if(tooLeft){
+        motorRight.SetPercent(speed);
+        motorLeft.SetPercent(.75 * speed);
+    }else if(tooRight){
+        motorLeft.SetPercent(speed);
+        motorRight.SetPercent(.75 * speed);
+    }else{
+        motorLeft.SetPercent(speed);
+        motorRight.SetPercent(speed);
+    }
+};
+
+void lineBackward(float speed){
+    bool tooLeft = lineRight.Value() < WHITELINE; //detects whiteline
+    bool tooRight = lineLeft.Value() < WHITELINE;
+
+    if(tooLeft){
+        motorRight.SetPercent(-speed);
+        motorLeft.SetPercent(-.75 * speed);
+    }else if(tooRight){
+        motorLeft.SetPercent(-speed);
+        motorRight.SetPercent(-.75 * speed);
+    }else{
+        motorLeft.SetPercent(-speed);
+        motorRight.SetPercent(-speed);
+    }
+};
+
+void driveForwardLeft(float speed){
+    motorBack.SetPercent(speed); 
+    motorRight.SetPercent(-speed); 
+}
+
+void driveForward(float speed){
+    motorRight.SetPercent(-speed); 
+    motorLeft.SetPercent(speed); 
+}
+
+void driveBackward(float speed){
+    motorRight.SetPercent(speed); 
+    motorLeft.SetPercent(-speed); 
+}
+
+void strafeLeft(float speed){
+    motorBack.SetPercent( speed);
+
+    //both clockwise
+    motorRight.SetPercent(-.5 * (speed)); 
+    motorLeft.SetPercent(-.5 * (speed)); 
+}
+
+void strafeRight(float speed){
+    motorBack.SetPercent(-speed);
+
+    //both counter-clockwise
+    motorRight.SetPercent(.5 * speed); 
+    motorLeft.SetPercent(.5 * speed); 
+}
+
+void spinRight(float speed){
+    motorBack.SetPercent(speed);
+    motorRight.SetPercent(speed); 
+    motorLeft.SetPercent(speed); 
+}
+
+void spinLeft(float speed){
+    motorBack.SetPercent(-speed);
+    motorRight.SetPercent(-speed); 
+    motorLeft.SetPercent(-speed); 
+}

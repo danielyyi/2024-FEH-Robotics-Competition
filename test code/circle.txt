@@ -1,0 +1,58 @@
+int state = MIDDLE; // Set the initial state
+
+while (true) { // I will follow this line forever!
+
+switch(state) {
+
+case MIDDLE:
+
+driveForward(50);
+
+if ( lineRight.Value() > /*tooRight*/) {
+
+state = RIGHT; // update a new state
+
+}
+//too left
+if ( lineRight.Value() > /* Right sensor is on line */ ) {
+
+state = RIGHT; // update a new state
+
+}
+break;
+
+
+case RIGHT:
+
+    motorLeft.SetPercent(50);
+    motorRight.SetPercent(.75 * 50);
+// Set motor powers for right turn
+
+/* Drive */
+
+if( /* I no longer need to turn right… */ ) {
+
+/* update a new state */
+
+}
+
+break;
+
+// If the left sensor is on the line...
+
+case LEFT:
+
+/* Mirror operation of RIGHT state */
+
+break;
+
+default: // Error. Something is very wrong.
+
+break;
+
+}
+
+Sleep(.1);
+
+}
+
