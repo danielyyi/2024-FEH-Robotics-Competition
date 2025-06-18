@@ -1,6 +1,8 @@
 # 2024 Ohio State FEH Robotics Competition Project
 
-This repo was created post-competition, to document the code I wrote for our robot. 
+This repo was created post-competition, to document the code I wrote for our robot.
+
+The production code is in main.cpp
 
 ## Overview
 
